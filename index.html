@@ -1,1 +1,472 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AUTOPSY AI Video</title>
 
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#080808;
+    color:#fff;
+}
+.app{
+    width:100%;
+    max-width:900px;
+    margin:auto;
+    min-height:100vh;
+    padding:20px;
+}
+header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 0 25px;
+}
+.logo{
+    font-size:28px;
+    font-weight:900;
+    letter-spacing:4px;
+}
+.badge{
+    border:1px solid #333;
+    padding:7px 12px;
+    border-radius:20px;
+    font-size:12px;
+}
+.hero{
+    text-align:center;
+    padding:30px 10px;
+}
+.hero h1{
+    font-size:38px;
+    margin:0 0 12px;
+}
+.hero p{
+    color:#aaa;
+    line-height:1.7;
+}
+.card{
+    background:#111;
+    border:1px solid #292929;
+    border-radius:20px;
+    padding:20px;
+    margin-top:18px;
+}
+.label{
+    display:block;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+.upload{
+    border:2px dashed #444;
+    border-radius:16px;
+    min-height:210px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    cursor:pointer;
+    overflow:hidden;
+}
+.upload:hover{border-color:#777}
+.upload img{
+    width:100%;
+    max-height:330px;
+    object-fit:contain;
+}
+.upload input{display:none}
+.upload-text{
+    color:#aaa;
+}
+textarea,select{
+    width:100%;
+    background:#090909;
+    border:1px solid #333;
+    color:#fff;
+    border-radius:12px;
+    padding:14px;
+    font-size:15px;
+    outline:none;
+}
+textarea{
+    min-height:130px;
+    resize:vertical;
+}
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+button{
+    width:100%;
+    border:0;
+    border-radius:13px;
+    padding:15px;
+    margin-top:15px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+.generate{
+    background:#fff;
+    color:#000;
+}
+.generate:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+}
+.examples{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+}
+.example{
+    width:auto;
+    margin:0;
+    padding:9px 12px;
+    background:#1b1b1b;
+    color:#ddd;
+    border:1px solid #333;
+    font-size:12px;
+}
+.progress{
+    display:none;
+    margin-top:20px;
+}
+.progress-bar{
+    height:8px;
+    background:#292929;
+    border-radius:20px;
+    overflow:hidden;
+}
+.progress-fill{
+    width:0%;
+    height:100%;
+    background:#fff;
+    transition:.3s;
+}
+.status{
+    color:#aaa;
+    font-size:13px;
+    margin-top:9px;
+}
+.result{
+    display:none;
+}
+video{
+    width:100%;
+    border-radius:16px;
+    background:#000;
+    max-height:650px;
+}
+.download{
+    background:#fff;
+    color:#000;
+    display:block;
+    text-align:center;
+    text-decoration:none;
+}
+.note{
+    color:#777;
+    font-size:12px;
+    line-height:1.7;
+    margin-top:15px;
+}
+.error{
+    color:#ff7070;
+    margin-top:12px;
+    display:none;
+}
+@media(max-width:600px){
+    .hero h1{font-size:30px}
+    .row{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="logo">AUTOPSY</div>
+    <div class="badge">AI VIDEO</div>
+</header>
+
+<section class="hero">
+    <h1>تصویر کو AI ویڈیو میں بدلیں</h1>
+    <p>
+        اپنی تصویر اپلوڈ کریں، پھر بتائیں کہ کردار کو کیا کرنا ہے۔
+        مثال: دوڑنا، چلنا، جمپ کرنا یا کیمرے کی طرف آنا۔
+    </p>
+</section>
+
+<div class="card">
+
+    <span class="label">1. تصویر منتخب کریں</span>
+
+    <label class="upload" id="uploadBox">
+        <input id="imageInput" type="file"
+               accept="image/png,image/jpeg,image/webp">
+
+        <div class="upload-text" id="uploadText">
+            📷<br><br>
+            تصویر منتخب کرنے کے لیے یہاں دبائیں
+        </div>
+
+        <img id="preview" style="display:none">
+    </label>
+
+</div>
+
+<div class="card">
+
+    <span class="label">2. AI Prompt</span>
+
+    <textarea id="prompt"
+    placeholder="مثال: اس شخص کو قدرتی انداز میں دوڑتے ہوئے دکھائیں، جسم کی حرکت حقیقت پسندانہ ہو، ہاتھ اور ٹانگیں صحیح حرکت کریں، کیمرہ اس کے ساتھ ٹریک کرے، cinematic realistic video"></textarea>
+
+    <div class="examples">
+
+        <button class="example"
+        onclick="setPrompt('اس شخص کو قدرتی انداز میں دوڑتے ہوئے دکھائیں، حقیقت پسندانہ جسمانی حرکت کے ساتھ')">
+        🏃 دوڑائیں
+        </button>
+
+        <button class="example"
+        onclick="setPrompt('اس شخص کو قدرتی انداز میں چلتے ہوئے دکھائیں، ہاتھ اور ٹانگوں کی حرکت حقیقت پسندانہ ہو')">
+        🚶 چلائیں
+        </button>
+
+        <button class="example"
+        onclick="setPrompt('اس شخص کو ایک قدرتی جمپ کرتے ہوئے دکھائیں، جسم کی مکمل حرکت حقیقت پسندانہ ہو')">
+        🦘 جمپ
+        </button>
+
+        <button class="example"
+        onclick="setPrompt('اس شخص کو کیمرے کی طرف آتے ہوئے دکھائیں، cinematic tracking camera اور realistic motion کے ساتھ')">
+        🎥 کیمرے کی طرف
+        </button>
+
+    </div>
+
+</div>
+
+<div class="card">
+
+    <span class="label">3. ویڈیو سیٹنگز</span>
+
+    <div class="row">
+
+        <div>
+            <span class="label">دورانیہ</span>
+            <select id="duration">
+                <option value="5">5 سیکنڈ</option>
+                <option value="8">8 سیکنڈ</option>
+                <option value="10">10 سیکنڈ</option>
+            </select>
+        </div>
+
+        <div>
+            <span class="label">Aspect Ratio</span>
+            <select id="ratio">
+                <option value="9:16">9:16</option>
+                <option value="16:9">16:9</option>
+                <option value="1:1">1:1</option>
+            </select>
+        </div>
+
+    </div>
+
+    <button class="generate" id="generateBtn">
+        ✨ AI ویڈیو بنائیں
+    </button>
+
+    <div class="error" id="error"></div>
+
+    <div class="progress" id="progress">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="status" id="status">
+            AI ویڈیو تیار ہو رہی ہے...
+        </div>
+    </div>
+
+</div>
+
+<div class="card result" id="result">
+
+    <span class="label">🎬 آپ کی ویڈیو</span>
+
+    <video id="videoResult" controls playsinline></video>
+
+    <a id="downloadBtn"
+       class="download"
+       download="autopsy-ai-video.webm">
+       ویڈیو محفوظ کریں
+    </a>
+
+</div>
+
+<div class="note">
+    نوٹ: اصل AI character motion کے لیے اس frontend کو
+    image-to-video AI backend/API سے connect کرنا ضروری ہے۔
+    API Key کو HTML میں رکھنا محفوظ نہیں ہے۔
+</div>
+
+</div>
+
+<script>
+
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const uploadText = document.getElementById("uploadText");
+const promptBox = document.getElementById("prompt");
+const generateBtn = document.getElementById("generateBtn");
+
+let selectedImage = null;
+
+imageInput.addEventListener("change", function(){
+
+    const file = this.files[0];
+
+    if(!file) return;
+
+    selectedImage = file;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+
+        preview.src = e.target.result;
+        preview.style.display = "block";
+        uploadText.style.display = "none";
+
+    };
+
+    reader.readAsDataURL(file);
+
+});
+
+function setPrompt(text){
+    promptBox.value = text;
+}
+
+function showError(message){
+
+    const error = document.getElementById("error");
+
+    error.textContent = message;
+    error.style.display = "block";
+
+}
+
+function hideError(){
+
+    const error = document.getElementById("error");
+
+    error.textContent = "";
+    error.style.display = "none";
+
+}
+
+generateBtn.addEventListener("click", async function(){
+
+    hideError();
+
+    if(!selectedImage){
+
+        showError("براہِ کرم پہلے تصویر منتخب کریں۔");
+        return;
+
+    }
+
+    if(!promptBox.value.trim()){
+
+        showError("براہِ کرم بتائیں کہ تصویر کے کردار کو کیا کرنا ہے۔");
+        return;
+
+    }
+
+    /*
+       یہاں اصل AI BACKEND API کو call کیا جائے گا۔
+
+       مثال:
+
+       POST /api/generate
+
+       FormData:
+       image = selectedImage
+       prompt = promptBox.value
+       duration = ...
+       ratio = ...
+
+       Backend:
+       → AI Image-to-Video model
+       → prediction شروع کرے
+       → prediction مکمل ہونے کا انتظار کرے
+       → video URL واپس کرے
+    */
+
+    await startGeneration();
+
+});
+
+async function startGeneration(){
+
+    generateBtn.disabled = true;
+
+    const progress = document.getElementById("progress");
+    const fill = document.getElementById("progressFill");
+    const status = document.getElementById("status");
+
+    progress.style.display = "block";
+
+    fill.style.width = "10%";
+    status.textContent = "تصویر اور prompt تیار کیے جا رہے ہیں...";
+
+    await wait(700);
+
+    fill.style.width = "25%";
+    status.textContent = "AI video request تیار ہو رہی ہے...";
+
+    await wait(700);
+
+    fill.style.width = "45%";
+    status.textContent = "AI character motion process شروع ہوگا...";
+
+    await wait(700);
+
+    fill.style.width = "65%";
+    status.textContent = "Running / Walking جیسی motion AI سے generate ہوگی...";
+
+    await wait(700);
+
+    fill.style.width = "85%";
+    status.textContent = "ویڈیو مکمل ہونے کا انتظار...";
+
+    await wait(700);
+
+    fill.style.width = "100%";
+
+    status.textContent =
+        "Backend API ابھی connect نہیں ہے۔ اگلے مرحلے میں اسے AI video model سے connect کریں گے۔";
+
+    generateBtn.disabled = false;
+
+}
+
+function wait(ms){
+    return new Promise(resolve => setTimeout(resolve,ms));
+}
+
+</script>
+
+</body>
+</html>
